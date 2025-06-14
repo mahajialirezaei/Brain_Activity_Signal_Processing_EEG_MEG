@@ -28,8 +28,9 @@ def process_edf_file(file_path):
         channel_names = raw.info['ch_names']
         data, times = raw[:, :]
 
-        raw.filter(8, 12, method='iir', verbose=False)
-        filtered_data, _ = raw[:, :]
+        b, a = signal.iirfilter(4, [8, 12], btype='bandpass', fs=fs, ftype='butter')
+
+        filtered_data = signal.lfilter(b, a, data)
 
         alpha_powers = []
         for i, ch in enumerate(channel_names):
@@ -45,7 +46,14 @@ def process_edf_file(file_path):
         plt.ylabel('Frequency (Hz)')
         plt.show()
 
-        return alpha_powers
+        return {
+            'raw_data': data,
+            'filtered_data': filtered_data,
+            'fs': fs,
+            'channel_names': channel_names,
+            'filter_coeffs': {'b': b, 'a': a},
+            'alpha_powers': alpha_powers
+        }
 
     except Exception as e:
         print(f"exception in process {file_path}: {str(e)}")
