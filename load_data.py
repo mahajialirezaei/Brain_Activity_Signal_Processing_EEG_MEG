@@ -10,8 +10,12 @@ subjects = ['S001', 'S002', 'S003', 'S004']
 runs = [f'R{i:02d}' for i in range(1, 15)]
 
 
-def band_power(param, fs, param1):
-    pass
+
+def band_power(data, sfreq, band):
+    f, Pxx = signal.welch(data, sfreq, nperseg=1024)
+    idx = np.where((f >= band[0]) & (f <= band[1]))[0]
+    return np.trapz(Pxx[idx], f[idx])
+
 
 
 def process_edf_file(file_path):
