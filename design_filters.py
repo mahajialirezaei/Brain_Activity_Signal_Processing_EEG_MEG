@@ -25,3 +25,28 @@ def determineHandW():
 
     return ls
 
+
+def design_z_transform():
+
+    ls_coeffs = determineHandW()
+    for b, a, fs in ls_coeffs:
+        w, h = freqz(b, a, worN=1024, fs=fs)
+
+        plt.figure(figsize=(6, 4))
+        plt.plot(w, 20 * np.log10(np.abs(h)))
+        plt.title('Magnitude Response')
+        plt.xlabel('Frequency [Hz]')
+        plt.ylabel('Gain [dB]')
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
+
+        plt.figure(figsize=(6, 4))
+        plt.plot(w, np.angle(h))
+        plt.title('Phase Response')
+        plt.xlabel('Frequency [Hz]')
+        plt.ylabel('Phase [rad]')
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
+
