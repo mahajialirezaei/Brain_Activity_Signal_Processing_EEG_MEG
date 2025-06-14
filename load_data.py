@@ -77,7 +77,7 @@ def process_all_files():
             edf_file = os.path.join(subject_dir, f"{subject}{run}.edf")
             event_file = edf_file + '.event'
 
-            alpha_powers = process_edf_file(edf_file)
+            alpha_powers = process_edf_file(edf_file)['alpha_powers']
             if alpha_powers:
                 all_alpha_powers.append({
                     'subject': subject,
