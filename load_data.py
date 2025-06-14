@@ -54,3 +54,32 @@ def process_edf_file(file_path):
         print(f"exception in process {file_path}: {str(e)}")
         return None
 
+
+
+def process_all_files():
+    all_alpha_powers = []
+
+    for subject in subjects:
+        subject_dir = os.path.join(base_dir, subject)
+
+        for run in runs:
+            edf_file = os.path.join(subject_dir, f"{subject}{run}.edf")
+            event_file = edf_file + '.event'
+
+            alpha_powers = process_edf_file(edf_file)
+            if alpha_powers:
+                all_alpha_powers.append({
+                    'subject': subject,
+                    'run': run,
+                    'alpha_powers': alpha_powers
+                })
+
+            if os.path.exists(event_file):
+                with open(event_file, 'r') as f:
+                    events = f.readlines()
+                print(f"events  {run}: {events}")
+
+
+    if all_alpha_powers:
+        avg_alpha = np.mean([np.mean(p['alpha_powers']) for p in all_alpha_powers])
+        print(f"\n average power of alpha in each file : {avg_alpha:.2f}")
