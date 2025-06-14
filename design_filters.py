@@ -50,3 +50,7 @@ def design_z_transform():
         plt.tight_layout()
         plt.show()
 
+
+
+design_z_transform()
+
