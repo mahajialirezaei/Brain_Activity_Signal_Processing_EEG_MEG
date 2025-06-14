@@ -10,6 +10,13 @@ subjects = ['S001', 'S002', 'S003', 'S004']
 runs = [f'R{i:02d}' for i in range(1, 15)]
 
 
+def getSubject():
+    return subjects
+def getRun():
+    return runs
+def getbase_dir():
+    return base_dir
+
 def band_power(data, sfreq, band):
     f, Pxx = signal.welch(data, sfreq, nperseg=1024)
     idx = np.where((f >= band[0]) & (f <= band[1]))[0]
