@@ -19,8 +19,8 @@ def determineHandW():
             edf_file = os.path.join(subject_dir, f"{subject}{run}.edf")
 
             called_func = load_data.process_edf_file(edf_file)
-            b, a = called_func()['filter_coeffs'].values()
-            fs = called_func()['fs']
+            b, a = called_func['filter_coeffs'].values()
+            fs = called_func['fs']
             ls.append((b, a, fs))
 
     return ls
@@ -53,4 +53,3 @@ def design_z_transform():
 
 
 design_z_transform()
-
