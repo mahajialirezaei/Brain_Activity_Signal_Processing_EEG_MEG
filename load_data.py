@@ -10,17 +10,14 @@ subjects = ['S001', 'S002', 'S003', 'S004']
 runs = [f'R{i:02d}' for i in range(1, 15)]
 
 
-
 def band_power(data, sfreq, band):
     f, Pxx = signal.welch(data, sfreq, nperseg=1024)
     idx = np.where((f >= band[0]) & (f <= band[1]))[0]
     return np.trapz(Pxx[idx], f[idx])
 
 
-
 def process_edf_file(file_path):
     try:
-
         raw = mne.io.read_raw_edf(file_path, preload=True)
 
         print("\n" + "=" * 50)
@@ -55,7 +52,6 @@ def process_edf_file(file_path):
         return None
 
 
-
 def process_all_files():
     all_alpha_powers = []
 
@@ -75,11 +71,14 @@ def process_all_files():
                 })
 
             if os.path.exists(event_file):
-                with open(event_file, 'r') as f:
+                with open(event_file, 'r', encoding='utf-8', errors='ignore') as f:
                     events = f.readlines()
-                print(f"events  {run}: {events}")
-
+                print(f"events {run}: {events}")
 
     if all_alpha_powers:
         avg_alpha = np.mean([np.mean(p['alpha_powers']) for p in all_alpha_powers])
         print(f"\n average power of alpha in each file : {avg_alpha:.2f}")
+
+
+
+process_all_files()
