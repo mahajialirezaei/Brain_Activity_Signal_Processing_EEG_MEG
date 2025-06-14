@@ -18,9 +18,10 @@ def determineHandW():
         for run in runs:
             edf_file = os.path.join(subject_dir, f"{subject}{run}.edf")
 
-            b, a = load_data.process_edf_file(edf_file)['filter_coeffs'].values()
-            ls.append((b, a))
+            called_func = load_data.process_edf_file(edf_file)
+            b, a = called_func()['filter_coeffs'].values()
+            fs = called_func()['fs']
+            ls.append((b, a, fs))
 
     return ls
-
 
