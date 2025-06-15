@@ -19,3 +19,8 @@ def compute_psd_dft(frames, fs):
         psd[i] = (1/(fs * N)) * np.abs(X)**2
     freqs = np.fft.rfftfreq(N, d=1/fs)
     return freqs, psd
+
+
+def band_power_from_psd(freqs, psd, band):
+    idx = np.logical_and(freqs >= band[0], freqs <= band[1])
+    return np.trapz(psd[:, idx], freqs[idx], axis=1)
