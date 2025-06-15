@@ -23,6 +23,10 @@ def getRun():
 
 def getbase_dir():
     return base_dir
+
+def getBands():
+    return BANDS
+
 def band_power(data, sfreq, band):
     f, Pxx = signal.welch(data, sfreq, nperseg=256, noverlap=128, scaling='density')
     idx = np.where((f >= band[0]) & (f <= band[1]))[0]

@@ -1,5 +1,16 @@
+import os
+
 import numpy as np
 from scipy.signal import windows
+
+import load_data
+from load_data import process_edf_file, getSubject, base_dir, getbase_dir, getBands, getRun
+
+subjects = getSubject()
+base_dir = getbase_dir()
+BANDS = getBands()
+runs = getRun()
+
 
 def frame_signal(data, fs, frame_sec=2.0, overlap=0.5):
     frame_len = int(frame_sec * fs)
@@ -24,3 +35,4 @@ def compute_psd_dft(frames, fs):
 def band_power_from_psd(freqs, psd, band):
     idx = np.logical_and(freqs >= band[0], freqs <= band[1])
     return np.trapz(psd[:, idx], freqs[idx], axis=1)
+
