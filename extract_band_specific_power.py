@@ -44,39 +44,37 @@ def band_power_from_psd(freqs, psd, band):
     return np.trapz(psd[:, idx], freqs[idx], axis=1)
 
 
-def calculate_band_powers():
+def calculate_band_powers(max_channels=1):
     for subject in subjects:
         subject_dir = os.path.join(base_dir, subject)
         for run in runs:
             edf_file = os.path.join(subject_dir, f"{subject}{run}.edf")
+            if not os.path.exists(edf_file):
+                continue
 
             result = process_edf_file(edf_file)
+            if result is None:
+                continue
 
             filtered_data = result['filtered_data']
-            if not isinstance(filtered_data, np.ndarray):
-                print(f"filtered_data not array for {subject} {run}, skipping.")
-                continue
             if filtered_data.ndim == 1:
                 filtered_data = filtered_data[np.newaxis, :]
 
-            channel_names = result.get('channel_names')
+            channel_names = result.get('channel_names', [])
             if len(channel_names) != filtered_data.shape[0]:
                 channel_names = [f'ch{i}' for i in range(filtered_data.shape[0])]
 
             fs = result['fs']
-            for ch_idx, ch_name in enumerate(channel_names):
+            for ch_idx, ch_name in list(enumerate(channel_names))[:max_channels]:
                 signal_1d = filtered_data[ch_idx]
-                frames = frame_signal(signal_1d, fs, frame_sec=2.0, overlap=0.5)
+                frames = frame_signal(signal_1d, fs)
                 if frames.shape[0] == 0:
-                    print(f"No frames for {subject} {run} {ch_name}, skipping.")
                     continue
 
                 freqs, psd = compute_psd_dft(frames, fs)
-
                 for band_name, band_range in BANDS.items():
                     band_powers = band_power_from_psd(freqs, psd, band_range)
                     if band_powers.size == 0:
-                        print(f"No PSD/band power for {band_name} on {subject} {run} {ch_name}")
                         continue
                     mean_power = np.mean(band_powers)
                     print(f"Subject {subject}, Run {run}, Channel {ch_name}, "
@@ -106,5 +104,8 @@ def plot_results(freqs, psd, band_powers, band_range, subject, run, ch_name, ban
         plt.show()
 
 
+
 if __name__ == '__main__':
-    calculate_band_powers()
+    # Only process the first channel per file
+    calculate_band_powers(max_channels=1)
+
