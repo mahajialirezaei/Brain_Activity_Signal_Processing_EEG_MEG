@@ -33,7 +33,7 @@ def band_power(data, sfreq, band):
     power = np.trapz(Pxx[idx], f[idx])
     return power * 1e6
 
-def process_edf_file(file_path):
+def process_edf_file(file_path, caller = 'nothing'):
     try:
         raw = mne.io.read_raw_edf(file_path, preload=True)
         fs = int(raw.info['sfreq'])
@@ -45,6 +45,13 @@ def process_edf_file(file_path):
             b, a = signal.iirfilter(4, band_range, btype='bandpass', fs=fs, ftype='butter')
             filters[band_name] = {'b': b, 'a': a}
 
+        filtered_array = np.vstack([
+            signal.filtfilt(filters[band_name]['b'],
+                            filters[band_name]['a'],
+                            data[ch_idx])
+            for ch_idx in range(data.shape[0])
+        ])
+
         powers = {band: [] for band in BANDS}
         for ch_idx, ch_name in enumerate(channel_names):
             for band_name, band_range in BANDS.items():
@@ -55,21 +62,22 @@ def process_edf_file(file_path):
                 )
                 power = band_power(filtered, fs, band_range)
                 powers[band_name].append(power)
-                print(f"Power of {band_name} in channel {ch_name}: {power}")
-
-        plt.figure(figsize=(12, 6))
-        plt.specgram(data[0], Fs=fs, cmap='viridis')
-        plt.colorbar(label='Power (dB)')
-        plt.title(f'Spectrogram for {os.path.basename(file_path)} - Channel {channel_names[0]}')
-        plt.xlabel('Time (s)')
-        plt.ylabel('Frequency (Hz)')
-        plt.show()
+                if caller == 'load_data':
+                    print(f"Power of {band_name} in channel {ch_name}: {power}")
+        if caller == 'load_data':
+            plt.figure(figsize=(12, 6))
+            plt.specgram(data[0], Fs=fs, cmap='viridis')
+            plt.colorbar(label='Power (dB)')
+            plt.title(f'Spectrogram for {os.path.basename(file_path)} - Channel {channel_names[0]}')
+            plt.xlabel('Time (s)')
+            plt.ylabel('Frequency (Hz)')
+            plt.show()
 
         return {
             'fs': fs,
             'channel_names': channel_names,
             'powers': powers,
-            'filtered_data': (raw[:,:], fs),
+            'filtered_data': filtered_array,
             'raw_data': data,
             'filters': filters
         }
@@ -91,7 +99,7 @@ def process_all_files():
                 print(f"File not found: {edf_file}")
                 continue
 
-            result = process_edf_file(edf_file)
+            result = process_edf_file(edf_file, 'load_data')
             if result is None:
                 continue
 
