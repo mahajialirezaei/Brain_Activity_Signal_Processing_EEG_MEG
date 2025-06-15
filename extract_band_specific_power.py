@@ -36,3 +36,28 @@ def band_power_from_psd(freqs, psd, band):
     idx = np.logical_and(freqs >= band[0], freqs <= band[1])
     return np.trapz(psd[:, idx], freqs[idx], axis=1)
 
+
+def calculate_mean():
+    for subject in subjects:
+        subject_dir = os.path.join(base_dir, subject)
+
+        for run in runs:
+            edf_file = os.path.join(subject_dir, f"{subject}{run}.edf")
+
+            if not os.path.exists(edf_file):
+                continue
+
+            result = load_data.process_edf_file(edf_file)
+            filtered_data = result['filtered_data']
+            channels = result['channels']
+            fs = result['fs']
+            if result is None:
+                continue
+            for ch_idx in channels:
+                data_channel = filtered_data[ch_idx]  # 1D array
+                frames = frame_signal(data_channel, fs)
+                freqs, psd = compute_psd_dft(frames, fs)
+                alpha_powers = band_power_from_psd(freqs, psd, [8, 12])
+
+                alpha_mean = np.mean(alpha_powers)
+                print(f'Alpha mean power: {alpha_mean:.4e}')
