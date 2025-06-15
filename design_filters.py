@@ -7,7 +7,6 @@ from scipy.signal import freqz
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 subjects = load_data.getSubject()
 runs = load_data.getRun()
 base_dir = load_data.getbase_dir()
@@ -28,7 +27,8 @@ def determineHandW():
             if result is None:
                 continue
 
-            band_filter = {'alpha': result['filters'].get('alpha'),'beta': result['filters'].get('beta'),'gamma': result['filters'].get('gamma')}
+            band_filter = {'alpha': result['filters'].get('alpha'), 'beta': result['filters'].get('beta'),
+                           'gamma': result['filters'].get('gamma')}
             if band_filter:
                 band_filter_alpha = band_filter['alpha']
                 band_filter_beta = band_filter['beta']
@@ -51,9 +51,6 @@ def determineHandW():
                     result['fs'],
                     f"{subject}-{run}"
                 ))
-
-
-
 
     return ls
 

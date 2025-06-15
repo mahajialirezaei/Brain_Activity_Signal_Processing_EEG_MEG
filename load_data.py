@@ -15,17 +15,22 @@ BANDS = {
     'gamma': [30, 45]
 }
 
+
 def getSubject():
     return subjects
+
 
 def getRun():
     return runs
 
+
 def getbase_dir():
     return base_dir
 
+
 def getBands():
     return BANDS
+
 
 def band_power(data, sfreq, band):
     f, Pxx = signal.welch(data, sfreq, nperseg=256, noverlap=128, scaling='density')
@@ -33,7 +38,8 @@ def band_power(data, sfreq, band):
     power = np.trapz(Pxx[idx], f[idx])
     return power * 1e6
 
-def process_edf_file(file_path, caller = 'nothing'):
+
+def process_edf_file(file_path, caller='nothing'):
     try:
         raw = mne.io.read_raw_edf(file_path, preload=True)
         fs = int(raw.info['sfreq'])
@@ -85,6 +91,7 @@ def process_edf_file(file_path, caller = 'nothing'):
         print(f"Exception in processing {file_path}: {str(e)}")
         return None
 
+
 def process_all_files():
     all_results = []
 
@@ -122,6 +129,7 @@ def process_all_files():
 
         for band, values in avg_powers.items():
             print(f"\nAverage {band} power across all files: {np.mean(values)}")
+
 
 if __name__ == '__main__':
     process_all_files()

@@ -2,8 +2,6 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import windows
-
-import load_data
 from load_data import process_edf_file, getSubject, getRun, getbase_dir, getBands
 
 subjects = getSubject()
@@ -81,6 +79,7 @@ def calculate_band_powers(max_channels=1):
                           f"Band {band_name}: Mean Power = {mean_power:.3e}")
                     plot_results(freqs, psd, band_powers, band_range, subject, run, ch_name, band_name)
 
+
 def plot_results(freqs, psd, band_powers, band_range, subject, run, ch_name, band_name):
     mean_psd = np.mean(psd, axis=0)
     plt.figure(figsize=(8, 4))
@@ -104,8 +103,5 @@ def plot_results(freqs, psd, band_powers, band_range, subject, run, ch_name, ban
         plt.show()
 
 
-
 if __name__ == '__main__':
-    # Only process the first channel per file
     calculate_band_powers(max_channels=1)
-
