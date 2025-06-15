@@ -65,6 +65,7 @@ def process_edf_file(file_path):
             'fs': fs,
             'channel_names': channel_names,
             'powers': powers,
+            'filtered_data': (raw[:,:], fs),
             'raw_data': data,
             'filters': filters
         }
