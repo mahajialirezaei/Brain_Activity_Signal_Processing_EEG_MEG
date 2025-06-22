@@ -5,10 +5,15 @@ import matplotlib.pyplot as plt
 from scipy import signal
 import numpy as np
 
+# base_dir = os.path.join(os.path.dirname(__file__), 'dataset', 'files')
+# subjects = ['S001', 'S002', 'S003', 'S004', 'S005', 'S006', 'S007', 'S008']
+# runs = ['R01', 'R02', 'R03', 'R04', 'R05', 'R06', 'R07', 'R08',
+#         'R09', 'R10', 'R11', 'R12', 'R13', 'R14'] #sample1
+
 base_dir = os.path.join(os.path.dirname(__file__), 'dataset', 'files')
-subjects = ['S001', 'S002', 'S003', 'S004', 'S005', 'S006', 'S007', 'S008']
-runs = ['R01', 'R02', 'R03', 'R04', 'R05', 'R06', 'R07', 'R08',
-        'R09', 'R10', 'R11', 'R12', 'R13', 'R14']
+subjects = ['S001', 'S002', 'S003', 'S004']
+runs = ['R01', 'R02', 'R03', 'R04'] #sample2
+
 BANDS = {
     'alpha': [8, 12],
     'beta': [13, 30],
