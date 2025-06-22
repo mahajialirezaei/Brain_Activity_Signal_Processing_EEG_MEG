@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import windows
 
-from dataset.Plot_spectrograms import plot_spectrogram_and_dominant
+from Plot_spectrograms import plot_spectrogram_and_dominant
 from load_data import process_edf_file, getSubject, getRun, getbase_dir, getBands
 
 subjects = getSubject()
