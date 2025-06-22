@@ -75,6 +75,7 @@ def calculate_band_powers(max_channels=1):
                 freqs, psd = compute_psd_dft(frames, fs)
                 plot_spectrogram_and_dominant(signal_1d, fs, frames, freqs, psd,
                                               BANDS, subject, run, ch_name)
+                plot_results(freqs, psd, subject, run, ch_name)
                 for band_name, band_range in BANDS.items():
                     band_powers = band_power_from_psd(freqs, psd, band_range)
                     if band_powers.size == 0:
@@ -82,11 +83,12 @@ def calculate_band_powers(max_channels=1):
                     mean_power = np.mean(band_powers)
                     print(f"Subject {subject}, Run {run}, Channel {ch_name}, "
                           f"Band {band_name}: Mean Power = {mean_power:.3e}")
-                    plot_results(freqs, psd, band_powers, band_range, subject, run, ch_name, band_name)
+                    plot_results_each_band(band_powers, band_range, subject, run, ch_name, band_name)
 
 
 
-def plot_results(freqs, psd, band_powers, band_range, subject, run, ch_name, band_name):
+
+def plot_results(freqs, psd, subject, run, ch_name):
     mean_psd = np.mean(psd, axis=0)
     plt.figure(figsize=(8, 4))
     plt.plot(freqs, mean_psd)
@@ -97,6 +99,9 @@ def plot_results(freqs, psd, band_powers, band_range, subject, run, ch_name, ban
     plt.tight_layout()
     plt.show()
 
+
+
+def plot_results_each_band(band_powers, band_range, subject, run, ch_name, band_name):
     if band_powers.size > 0:
         plt.figure(figsize=(6, 2))
         plt.imshow(band_powers[np.newaxis, :], aspect='auto', cmap='viridis',
