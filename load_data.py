@@ -39,6 +39,16 @@ def band_power(data, sfreq, band):
     return power * 1e6
 
 
+def plt_edf_file_plot(data, fs, file_path, channel_names):
+    plt.figure(figsize=(12, 6))
+    plt.specgram(data[0], Fs=fs, cmap='viridis')
+    plt.colorbar(label='Power (dB)')
+    plt.title(f'Spectrogram for {os.path.basename(file_path)} - Channel {channel_names[0]}')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Frequency (Hz)')
+    plt.show()
+
+
 def process_edf_file(file_path, caller='nothing'):
     try:
         raw = mne.io.read_raw_edf(file_path, preload=True)
@@ -71,13 +81,7 @@ def process_edf_file(file_path, caller='nothing'):
                 if caller == 'load_data':
                     print(f"Power of {band_name} in channel {ch_name}: {power}")
         if caller == 'load_data':
-            plt.figure(figsize=(12, 6))
-            plt.specgram(data[0], Fs=fs, cmap='viridis')
-            plt.colorbar(label='Power (dB)')
-            plt.title(f'Spectrogram for {os.path.basename(file_path)} - Channel {channel_names[0]}')
-            plt.xlabel('Time (s)')
-            plt.ylabel('Frequency (Hz)')
-            plt.show()
+            plt_edf_file_plot(data, fs, file_path, channel_names)
 
         return {
             'fs': fs,
