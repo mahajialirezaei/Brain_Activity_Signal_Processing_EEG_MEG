@@ -2,6 +2,8 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import windows
+
+from dataset.Plot_spectrograms import plot_spectrogram_and_dominant
 from load_data import process_edf_file, getSubject, getRun, getbase_dir, getBands
 
 subjects = getSubject()
@@ -66,10 +68,13 @@ def calculate_band_powers(max_channels=1):
             for ch_idx, ch_name in list(enumerate(channel_names))[:max_channels]:
                 signal_1d = filtered_data[ch_idx]
                 frames = frame_signal(signal_1d, fs)
+
                 if frames.shape[0] == 0:
                     continue
 
                 freqs, psd = compute_psd_dft(frames, fs)
+                plot_spectrogram_and_dominant(signal_1d, fs, frames, freqs, psd,
+                                              BANDS, subject, run, ch_name)
                 for band_name, band_range in BANDS.items():
                     band_powers = band_power_from_psd(freqs, psd, band_range)
                     if band_powers.size == 0:
@@ -78,6 +83,7 @@ def calculate_band_powers(max_channels=1):
                     print(f"Subject {subject}, Run {run}, Channel {ch_name}, "
                           f"Band {band_name}: Mean Power = {mean_power:.3e}")
                     plot_results(freqs, psd, band_powers, band_range, subject, run, ch_name, band_name)
+
 
 
 def plot_results(freqs, psd, band_powers, band_range, subject, run, ch_name, band_name):
