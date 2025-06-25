@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 from load_data import process_edf_file, getSubject, getRun, getbase_dir, getBands
 from Plot_spectrograms import plot_spectrogram_and_dominant
 from extract_band_specific_power import frame_signal, compute_psd_dft, band_power_from_psd
-from load_data import getSubject, getRun, getbase_dir, getBands
 
 base_dir = getbase_dir()
 subjects = getSubject()
@@ -30,14 +29,20 @@ def extract_epoch_features(res, ch_idx=0, epoch_sec=1.0):
 
 def load_labels(edf_path):
     evt = edf_path + '.event'
-    with open(evt, 'r') as f:
-        return [int(line.strip()) for line in f if line.strip() in ('0','1')]
+    labels = []
+    if not os.path.exists(evt):
+        return labels
+    with open(evt, 'r', encoding='utf-8', errors='ignore') as f:
+        for line in f:
+            s = line.strip()
+            if s in ('0', '1'):
+                labels.append(int(s))
+    return labels
 
 def collect_all_data():
     X_list, y_list = [], []
-    last_res = None
-    last_subj = None
-    last_run = None
+    last_res = last_subj = last_run = None
+
     for subj in subjects:
         for run in runs:
             edf_path = os.path.join(base_dir, subj, f"{subj}{run}.edf")
@@ -49,6 +54,9 @@ def collect_all_data():
                 continue
 
             labels = load_labels(edf_path)
+            if len(labels) == 0:
+                continue
+
             feat_C3 = extract_epoch_features(res, ch_idx=0)
             feat_C4 = extract_epoch_features(res, ch_idx=1)
             feats = np.hstack([feat_C3, feat_C4])
@@ -61,10 +69,12 @@ def collect_all_data():
                 last_subj = subj
                 last_run = run
 
+    if not X_list:
+        raise RuntimeError("No data collected: check your .event files and paths")
+
     X = np.vstack(X_list)
     y = np.hstack(y_list)
     return X, y, last_res, last_subj, last_run
-
 
 def train_and_get_feedback(X, y):
     X_train, X_test, y_train, y_test = train_test_split(
@@ -73,20 +83,26 @@ def train_and_get_feedback(X, y):
     clf = LogisticRegression(max_iter=500).fit(X_train, y_train)
     acc = accuracy_score(y_test, clf.predict(X_test))
     print(f"BCI classification accuracy: {acc:.2%}")
-    return clf,X_train, X_test, y_train, y_test
+    return clf, X_train, X_test, y_train, y_test
 
 
+def show_spectrogram(last_res, last_subj, last_run):
+    if last_res is None:
+        print("No last result to show spectrogram.")
+        return
 
+    raw_sig = last_res['raw_data'][0]
+    fs = last_res['fs']
+    frames = frame_signal(raw_sig, fs, frame_sec=1.0, overlap=0.5)
+    freqs, psd = compute_psd_dft(frames, fs)
 
-def show_spectogram(last_res, last_subj, last_run):
-    if last_res is not None:
-        raw_sig = last_res['raw_data'][0]  # C3 channel
-        fs = last_res['fs']
-        frames = frame_signal(raw_sig, fs, frame_sec=1.0, overlap=0.5)
-        freqs, psd = compute_psd_dft(frames, fs)
+    plot_spectrogram_and_dominant(
+        raw_sig, fs, frames, freqs, psd,
+        BANDS, last_subj, last_run,
+        channel_names=last_res['channel_names'][0]
+    )
 
-        plot_spectrogram_and_dominant(
-            raw_sig, fs, frames, freqs, psd,
-            BANDS, last_subj, last_run,
-            channel_names=last_res['channel_names'][0]
-        )
+if __name__ == "__main__":
+    X, y, last_res, last_subj, last_run = collect_all_data()
+    train_and_get_feedback(X, y)
+    show_spectrogram(last_res, last_subj, last_run)
