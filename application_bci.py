@@ -35,6 +35,9 @@ def load_labels(edf_path):
 
 def collect_all_data():
     X_list, y_list = [], []
+    last_res = None
+    last_subj = None
+    last_run = None
     for subj in subjects:
         for run in runs:
             edf_path = os.path.join(base_dir, subj, f"{subj}{run}.edf")
@@ -54,10 +57,13 @@ def collect_all_data():
             if len(labels) >= n_epochs:
                 X_list.append(feats)
                 y_list.append(labels[:n_epochs])
+                last_res = res
+                last_subj = subj
+                last_run = run
 
     X = np.vstack(X_list)
     y = np.hstack(y_list)
-    return X, y
+    return X, y, last_res, last_subj, last_run
 
 
 def train_and_get_feedback(X, y):
