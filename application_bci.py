@@ -27,3 +27,8 @@ def extract_epoch_features(res, ch_idx=0, epoch_sec=1.0):
     alpha_pow = band_power_from_psd(freqs, psd, BANDS['alpha'])
     beta_pow  = band_power_from_psd(freqs, psd, BANDS['beta'])
     return np.vstack([alpha_pow, beta_pow]).T
+
+def load_labels(edf_path):
+    evt = edf_path + '.event'
+    with open(evt, 'r') as f:
+        return [int(line.strip()) for line in f if line.strip() in ('0','1')]
