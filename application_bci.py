@@ -32,3 +32,29 @@ def load_labels(edf_path):
     evt = edf_path + '.event'
     with open(evt, 'r') as f:
         return [int(line.strip()) for line in f if line.strip() in ('0','1')]
+
+def collect_all_data():
+    X_list, y_list = [], []
+    for subj in subjects:
+        for run in runs:
+            edf_path = os.path.join(base_dir, subj, f"{subj}{run}.edf")
+            if not os.path.exists(edf_path):
+                continue
+
+            res = process_edf_file(edf_path)
+            if res is None:
+                continue
+
+            labels = load_labels(edf_path)
+            feat_C3 = extract_epoch_features(res, ch_idx=0)
+            feat_C4 = extract_epoch_features(res, ch_idx=1)
+            feats = np.hstack([feat_C3, feat_C4])
+            n_epochs = feats.shape[0]
+
+            if len(labels) >= n_epochs:
+                X_list.append(feats)
+                y_list.append(labels[:n_epochs])
+
+    X = np.vstack(X_list)
+    y = np.hstack(y_list)
+    return X, y
