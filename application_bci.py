@@ -74,3 +74,19 @@ def train_and_get_feedback(X, y):
     acc = accuracy_score(y_test, clf.predict(X_test))
     print(f"BCI classification accuracy: {acc:.2%}")
     return clf,X_train, X_test, y_train, y_test
+
+
+
+
+def show_spectogram(last_res, last_subj, last_run):
+    if last_res is not None:
+        raw_sig = last_res['raw_data'][0]  # C3 channel
+        fs = last_res['fs']
+        frames = frame_signal(raw_sig, fs, frame_sec=1.0, overlap=0.5)
+        freqs, psd = compute_psd_dft(frames, fs)
+
+        plot_spectrogram_and_dominant(
+            raw_sig, fs, frames, freqs, psd,
+            BANDS, last_subj, last_run,
+            channel_names=last_res['channel_names'][0]
+        )
