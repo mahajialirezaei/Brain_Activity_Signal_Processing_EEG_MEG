@@ -87,6 +87,12 @@ def process_edf_file(file_path, caller='nothing'):
                     print(f"Power of {band_name} in channel {ch_name}: {power}")
         if caller == 'load_data':
             plt_edf_file_plot(data, fs, file_path, channel_names)
+        try:
+            annot = mne.read_annotations(file_path + '.event')
+            raw.set_annotations(annot)
+            events, event_id = mne.events_from_annotations(raw)
+        except Exception:
+            events, event_id = np.empty((0, 3), int), {}
 
         return {
             'fs': fs,
@@ -94,7 +100,9 @@ def process_edf_file(file_path, caller='nothing'):
             'powers': powers,
             'filtered_data': filtered_array,
             'raw_data': data,
-            'filters': filters
+            'filters': filters,
+            'events': events,
+            'event_id': event_id
         }
     except Exception as e:
         print(f"Exception in processing {file_path}: {str(e)}")
