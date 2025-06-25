@@ -58,3 +58,13 @@ def collect_all_data():
     X = np.vstack(X_list)
     y = np.hstack(y_list)
     return X, y
+
+
+def train_and_get_feedback(X, y):
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
+    clf = LogisticRegression(max_iter=500).fit(X_train, y_train)
+    acc = accuracy_score(y_test, clf.predict(X_test))
+    print(f"BCI classification accuracy: {acc:.2%}")
+    return clf,X_train, X_test, y_train, y_test
