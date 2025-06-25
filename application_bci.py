@@ -19,19 +19,11 @@ runs = getRun()
 BANDS = getBands()
 
 def extract_epoch_features(res, ch_idx=0, epoch_sec=1.0):
-    """
-    برای یک کانال مشخص،:
-      - به اپوک‌های 1 s تقسیم می‌کند،
-      - PSD را استخراج می‌کند،
-      - توان α و β را برمی‌گرداند.
-    """
     fs = res['fs']
-    data = res['filtered_data'][ch_idx]      # فیلترشده کانال ch_idx
+    data = res['filtered_data'][ch_idx]
     frames = frame_signal(data, fs, epoch_sec, overlap=0.0)
     freqs, psd = compute_psd_dft(frames, fs)
 
-    # α و β دو باندی که برای BCI معمولاً کافی‌اند:
     alpha_pow = band_power_from_psd(freqs, psd, BANDS['alpha'])
     beta_pow  = band_power_from_psd(freqs, psd, BANDS['beta'])
-    # برمی‌گرداند ماتریس shape=(n_epochs, 2)
     return np.vstack([alpha_pow, beta_pow]).T
