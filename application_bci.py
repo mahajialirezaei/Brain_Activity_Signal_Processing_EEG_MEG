@@ -60,11 +60,10 @@ def extract_motor_imagery_features():
                 for ch in target_channels:
                     idx = ch_names.index(ch)
                     sig = seg[idx]
-                    # Band powers
                     for band in bands.values():
                         f, Pxx = signal.welch(sig, fs, nperseg=256, noverlap=128)
                         idxb = np.where((f >= band[0]) & (f <= band[1]))[0]
-                        p = np.trapz(Pxx[idxb], f[idxb]) * 1e6
+                        p = np.trapezoid(Pxx[idxb], f[idxb]) * 1e6
                         feats.append(p)
                 X.append(feats)
                 y.append(label)
@@ -103,7 +102,7 @@ def simulate_online(clf):
             for band in bands.values():
                 f, Pxx = signal.welch(sig, fs, nperseg=256, noverlap=128)
                 idxb = np.where((f >= band[0]) & (f <= band[1]))[0]
-                p = np.trapz(Pxx[idxb], f[idxb]) * 1e6
+                p = np.trapezoid(Pxx[idxb], f[idxb]) * 1e6
                 feats.append(p)
         pred = clf.predict([feats])[0]
         action = 'LEFT' if pred == 0 else 'RIGHT'
