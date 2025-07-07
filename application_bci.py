@@ -1,108 +1,122 @@
 import os
 import numpy as np
-import mne
 from scipy import signal
-from scipy.signal import windows, spectrogram
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
-import matplotlib.pyplot as plt
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.model_selection import train_test_split, cross_val_score
+import joblib
+import mne
 
 from load_data import process_edf_file, getSubject, getRun, getbase_dir, getBands
-from Plot_spectrograms import plot_spectrogram_and_dominant
-from extract_band_specific_power import frame_signal, compute_psd_dft, band_power_from_psd
 
-base_dir = getbase_dir()
+imagery_runs = ['R04', 'R08', 'R12']
+target_channels = ['C3..', 'C4..']
+window_sec = 2.0
+
 subjects = getSubject()
 runs = getRun()
-BANDS = getBands()
+base_dir = getbase_dir()
+bands = getBands()
 
-def extract_epoch_features(res, ch_idx=0, epoch_sec=1.0):
-    fs = res['fs']
-    data = res['filtered_data'][ch_idx]
-    frames = frame_signal(data, fs, epoch_sec, overlap=0.0)
-    freqs, psd = compute_psd_dft(frames, fs)
 
-    alpha_pow = band_power_from_psd(freqs, psd, BANDS['alpha'])
-    beta_pow  = band_power_from_psd(freqs, psd, BANDS['beta'])
-    return np.vstack([alpha_pow, beta_pow]).T
-
-def load_labels(edf_path):
-    evt = edf_path + '.event'
-    labels = []
-    if not os.path.exists(evt):
-        return labels
-    with open(evt, 'r', encoding='utf-8', errors='ignore') as f:
-        for line in f:
-            s = line.strip()
-            if s in ('0', '1'):
-                labels.append(int(s))
-    return labels
-
-def collect_all_data():
-    X_list, y_list = [], []
-    last_res = last_subj = last_run = None
-
-    for subj in subjects:
+def extract_motor_imagery_features():
+    X, y = [], []
+    for subject in subjects:
+        subj_dir = os.path.join(base_dir, subject)
         for run in runs:
-            edf_path = os.path.join(base_dir, subj, f"{subj}{run}.edf")
+            if run not in imagery_runs:
+                continue
+            edf_path = os.path.join(subj_dir, f"{subject}{run}.edf")
             if not os.path.exists(edf_path):
                 continue
-
+            # Load processed data
             res = process_edf_file(edf_path)
             if res is None:
                 continue
 
-            labels = load_labels(edf_path)
-            if len(labels) == 0:
-                continue
+            fs = res['fs']
+            data = res['raw_data']
+            ch_names = res['channel_names']
+            events = res['events']
+            event_id = res['event_id']
 
-            feat_C3 = extract_epoch_features(res, ch_idx=0)
-            feat_C4 = extract_epoch_features(res, ch_idx=1)
-            feats = np.hstack([feat_C3, feat_C4])
-            n_epochs = feats.shape[0]
+            if len(events) == 0:
+                raw = mne.io.read_raw_edf(edf_path, preload=True, verbose=False)
+                events, event_id = mne.events_from_annotations(raw, event_id=None)
 
-            if len(labels) >= n_epochs:
-                X_list.append(feats)
-                y_list.append(labels[:n_epochs])
-                last_res = res
-                last_subj = subj
-                last_run = run
+            code_left = event_id.get('T1', event_id.get('1'))
+            code_right = event_id.get('T2', event_id.get('2'))
+            win_len = int(window_sec * fs)
 
-    if not X_list:
-        raise RuntimeError("No data collected: check your .event files and paths")
+            for _, onset, code in events:
+                if code not in (code_left, code_right):
+                    continue
+                label = 0 if code == code_left else 1
+                start = onset
+                end = onset + win_len
+                if end > data.shape[1]:
+                    continue
+                seg = data[:, start:end]
+                feats = []
+                for ch in target_channels:
+                    idx = ch_names.index(ch)
+                    sig = seg[idx]
+                    # Band powers
+                    for band in bands.values():
+                        f, Pxx = signal.welch(sig, fs, nperseg=256, noverlap=128)
+                        idxb = np.where((f >= band[0]) & (f <= band[1]))[0]
+                        p = np.trapz(Pxx[idxb], f[idxb]) * 1e6
+                        feats.append(p)
+                X.append(feats)
+                y.append(label)
+    return np.array(X), np.array(y)
 
-    X = np.vstack(X_list)
-    y = np.hstack(y_list)
-    return X, y, last_res, last_subj, last_run
 
-def train_and_get_feedback(X, y):
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
-    clf = LogisticRegression(max_iter=500).fit(X_train, y_train)
-    acc = accuracy_score(y_test, clf.predict(X_test))
-    print(f"BCI classification accuracy: {acc:.2%}")
-    return clf, X_train, X_test, y_train, y_test
+def train_lda(X, y):
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    clf = LinearDiscriminantAnalysis()
+    clf.fit(X_train, y_train)
+    print(f"Test accuracy: {clf.score(X_test, y_test):.2f}")
+    cv = cross_val_score(clf, X, y, cv=5)
+    print(f"5-fold CV: {cv.mean():.2f} ± {cv.std():.2f}")
+    joblib.dump(clf, 'mi_lda_physionet.pkl')
+    return clf
 
 
-def show_spectrogram(last_res, last_subj, last_run):
-    if last_res is None:
-        print("No last result to show spectrogram.")
+def simulate_online(clf):
+    print("Simulated online motor imagery classification:")
+    subject = subjects[0]
+    run = imagery_runs[0]
+    edf_path = os.path.join(base_dir, subject, f"{subject}{run}.edf")
+    raw = mne.io.read_raw_edf(edf_path, preload=True, verbose=False)
+    data = raw.get_data()
+    ch_names = raw.info['ch_names']
+    fs = int(raw.info['sfreq'])
+
+    win = int(window_sec * fs)
+    hop = int(win * 0.5)
+    for start in range(0, data.shape[1] - win + 1, hop):
+        seg = data[:, start:start+win]
+        feats = []
+        for ch in target_channels:
+            idx = ch_names.index(ch)
+            sig = seg[idx]
+            for band in bands.values():
+                f, Pxx = signal.welch(sig, fs, nperseg=256, noverlap=128)
+                idxb = np.where((f >= band[0]) & (f <= band[1]))[0]
+                p = np.trapz(Pxx[idxb], f[idxb]) * 1e6
+                feats.append(p)
+        pred = clf.predict([feats])[0]
+        action = 'LEFT' if pred == 0 else 'RIGHT'
+        print(f"{start/fs:.2f}-{(start+win)/fs:.2f}s -> {action}")
+
+
+def main():
+    X, y = extract_motor_imagery_features()
+    if X.size == 0:
+        print("No motor imagery data found. Check your .event files or channels.")
         return
+    clf = train_lda(X, y)
+    simulate_online(clf)
 
-    raw_sig = last_res['raw_data'][0]
-    fs = last_res['fs']
-    frames = frame_signal(raw_sig, fs, frame_sec=1.0, overlap=0.5)
-    freqs, psd = compute_psd_dft(frames, fs)
-
-    plot_spectrogram_and_dominant(
-        raw_sig, fs, frames, freqs, psd,
-        BANDS, last_subj, last_run,
-        channel_names=last_res['channel_names'][0]
-    )
-
-if __name__ == "__main__":
-    X, y, last_res, last_subj, last_run = collect_all_data()
-    train_and_get_feedback(X, y)
-    show_spectrogram(last_res, last_subj, last_run)
+if __name__ == '__main__':
+    main()
