@@ -10,9 +10,14 @@ import numpy as np
 # runs = ['R01', 'R02', 'R03', 'R04', 'R05', 'R06', 'R07', 'R08',
 #         'R09', 'R10', 'R11', 'R12', 'R13', 'R14'] #sample1
 
+# base_dir = os.path.join(os.path.dirname(__file__), 'dataset', 'files')
+# subjects = ['S001', 'S002', 'S003', 'S004']
+# runs = ['R01', 'R02', 'R03', 'R04'] #sample2
+
+
 base_dir = os.path.join(os.path.dirname(__file__), 'dataset', 'files')
-subjects = ['S001', 'S002', 'S003', 'S004']
-runs = ['R01', 'R02', 'R03', 'R04'] #sample2
+subjects = ['S001']
+runs = ['R01'] #sample3
 
 BANDS = {
     'alpha': [8, 12],
