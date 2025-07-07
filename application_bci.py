@@ -77,6 +77,8 @@ def train_lda(X, y):
     print(f"Test accuracy: {clf.score(X_test, y_test):.2f}")
     cv = cross_val_score(clf, X, y, cv=5)
     print(f"5-fold CV: {cv.mean():.2f} ± {cv.std():.2f}")
+    for c_idx, c in enumerate(cv):
+        print(c_idx, c)
     joblib.dump(clf, 'mi_lda_physionet.pkl')
     return clf
 
