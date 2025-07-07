@@ -24,7 +24,7 @@ def plot_spectrogram_and_dominant(signal_1d, fs, frames, freqs, psd, band_ranges
         pows = []
         for band in band_ranges.values():
 
-            pows.append(np.trapz(psd[i, (freqs>=band[0]) & (freqs<=band[1])],
+            pows.append(np.trapezoid(psd[i, (freqs>=band[0]) & (freqs<=band[1])],
                                  freqs[(freqs>=band[0]) & (freqs<=band[1])]))
         rhythm_idx.append(int(np.argmax(pows)))
 
