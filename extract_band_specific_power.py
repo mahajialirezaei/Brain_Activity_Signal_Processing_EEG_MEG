@@ -41,7 +41,7 @@ def band_power_from_psd(freqs, psd, band):
     if freqs.size == 0 or psd.size == 0:
         return np.array([])
     idx = np.logical_and(freqs >= band[0], freqs <= band[1])
-    return np.trapz(psd[:, idx], freqs[idx], axis=1)
+    return np.trapezoid(psd[:, idx], freqs[idx], axis=1)
 
 
 def calculate_band_powers(max_channels=1):
