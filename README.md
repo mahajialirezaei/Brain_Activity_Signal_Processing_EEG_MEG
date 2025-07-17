@@ -7,19 +7,19 @@ This repository provides a collection of Python scripts for processing EEG/MEG r
 ## 📂 Repository Structure
 
 
-.
-├── dataset/
-│   └── files/
-│       ├── S001/
-│       │   ├── S001R01.edf
-│       │   └── S001R01.edf.event
-│       ├── S002/ …
-│       └── …
-├── load\_data.py
-├── extract\_band\_specific\_power.py
-├── design\_filters.py
-├── Plot\_spectrograms.py
-└── application\_bci.py
+
+├── dataset/<br>
+│   └── files/<br>
+│       ├── S001/<br>
+│       │   ├── S001R01.edf<br>
+│       │   └── S001R01.edf.event<br>
+│       ├── S002/ …<br>
+│       └── …<br>
+├── load\_data.py<br>
+├── extract\_band\_specific\_power.py<br>
+├── design\_filters.py<br>
+├── Plot\_spectrograms.py<br>
+└── application\_bci.py<br>
 
 - **dataset/files/**  
   Organize your raw EDF recordings and corresponding `.event` annotation files by subject (e.g. `S001/S001R01.edf`, `S001R01.edf.event`).
