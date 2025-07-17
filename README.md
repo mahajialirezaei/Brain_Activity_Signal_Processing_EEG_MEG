@@ -149,6 +149,9 @@ pip install mne numpy scipy matplotlib scikit-learn joblib
 * Welch’s method for power spectral density estimation
 * Linear Discriminant Analysis for BCI feature classification
 
----
+## 🛠 Developer
 
-Feel free to adapt parameters (e.g., frame length, overlap, bands) or extend the scripts to other tasks (e.g., time‑frequency decomposition, different classifiers). Pull requests and issues are welcome!
+Developed by [Mohammad Amin Haji Alirezaei](https://github.com/mahajialirezaei)
+Feel free to ⭐️ this repo or open an issue if you'd like to contribute or have questions!
+
+---
