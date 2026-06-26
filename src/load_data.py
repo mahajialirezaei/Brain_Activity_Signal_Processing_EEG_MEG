@@ -15,7 +15,7 @@ import numpy as np
 # runs = ['R01', 'R02', 'R03', 'R04'] #sample2
 
 
-base_dir = os.path.join(os.path.dirname(__file__), 'dataset', 'files')
+base_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'dataset', 'files')
 subjects = ['S001']
 runs = ['R01'] #sample3
 
