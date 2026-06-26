@@ -1,157 +1,200 @@
-# Brain Activity Signal Processing (EEG/MEG)
+# 🧠 Brain Activity Signal Processing (EEG/MEG)
 
-This repository provides a collection of Python scripts for processing EEG/MEG recordings, extracting band‑specific power features, designing and visualizing digital filters, plotting spectrograms, and building a simple motor‑imagery BCI (Brain–Computer Interface) application.
+[![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://python.org)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
+A comprehensive Python toolbox for processing EEG/MEG recordings, extracting band‑specific power features, designing digital filters, visualizing spectrograms, and building a motor‑imagery **Brain–Computer Interface (BCI)** application.
 
 ---
 
-## 📂 Repository Structure
+## 📂 Project Structure
 
-
-
-├── dataset/<br>
-│   └── files/<br>
-│       ├── S001/<br>
-│       │   ├── S001R01.edf<br>
-│       │   └── S001R01.edf.event<br>
-│       ├── S002/ …<br>
-│       └── …<br>
-├── load\_data.py<br>
-├── extract\_band\_specific\_power.py<br>
-├── design\_filters.py<br>
-├── Plot\_spectrograms.py<br>
-└── application\_bci.py<br>
-
-- **dataset/files/**  
-  Organize your raw EDF recordings and corresponding `.event` annotation files by subject (e.g. `S001/S001R01.edf`, `S001R01.edf.event`).
-
-- **load_data.py**  
-  - Reads EDF files using MNE, applies bandpass filters for α (8–12 Hz), β (13–30 Hz), γ (30–45 Hz).
-  - Computes absolute band power via Welch’s method.
-  - Plots a spectrogram for each file/channel.
-  - Loads annotation events if a `.event` file exists.
-  - Exposes:
-    - `process_edf_file(...)` → returns raw data, filtered data, power per band, filters, event markers.
-    - Utility getters: `getSubject()`, `getRun()`, `getbase_dir()`, `getBands()`.
-
-- **extract_band_specific_power.py**  
-  - Frames each channel’s filtered signal into overlapping windows.
-  - Computes PSD via DFT and extracts band power per frame.
-  - Calls `plot_spectrogram_and_dominant` to visualize spectrogram and dominant rhythms.
-  - Plots average PSD and band‑power time series.
-
-- **design_filters.py**  
-  - Retrieves filters designed in `load_data.py` for each band/subject.
-  - Plots frequency responses (magnitude & phase) and pole–zero diagrams for α, β, γ filters.
-
-- **Plot_spectrograms.py**  
-  - Defines `plot_spectrogram_and_dominant()`, used by `extract_band_specific_power.py`.
-  - Displays:
-    - Time–frequency spectrogram (0–50 Hz).
-    - Scatter of dominant rhythm per frame.
-
-- **application_bci.py**  
-  - Implements a simple motor‑imagery BCI pipeline:
-    1. **Feature extraction**: for runs labeled “R04”, “R08”, “R12”, extract α/β/γ band power from C3 and C4 channels around motor‑imagery events.
-    2. **Classification**: trains an LDA classifier, reports test accuracy, cross‑validation scores, and plots ROC.
-    3. **Online simulation**: applies the trained model in sliding windows to simulate real‑time classification (LEFT vs. RIGHT imagery).
+```
+Brain_Activity_Signal_Processing_EEG_MEG/
+│
+├── dataset/                           # (Raw data - not tracked by git)
+│   └── files/
+│       └── S001/
+│           ├── S001R01.edf
+│           └── S001R01.edf.event
+│
+├── src/                               # All source code
+│   ├── __init__.py                    # Package initialization
+│   ├── load_data.py                   # EDF loading, filtering, event parsing
+│   ├── extract_band_specific_power.py # Framing & DFT-based PSD extraction
+│   ├── design_filters.py              # Frequency response & pole-zero plots
+│   ├── plot_spectrograms.py           # Spectrogram & dominant rhythm plots
+│   └── application_bci.py             # Motor-imagery BCI (LDA classifier)
+│
+├── results/                           # (Optional) Saved models and plots
+│
+├── requirements.txt                   # Python dependencies
+└── README.md                          # This file
+```
 
 ---
 
 ## ⚙️ Installation & Dependencies
 
+### 1. Clone the Repository
 ```bash
-# Clone repo
 git clone https://github.com/mahajialirezaei/Brain_Activity_Signal_Processing_EEG_MEG.git
 cd Brain_Activity_Signal_Processing_EEG_MEG
+```
 
-# (Optional) Create and activate a virtual environment
-python3 -m venv venv
+### 2. (Optional) Create a Virtual Environment
+```bash
+python -m venv venv
+# On Windows:
+venv\Scripts\activate
+# On macOS/Linux:
 source venv/bin/activate
+```
 
-# Install required packages
-pip install mne numpy scipy matplotlib scikit-learn joblib
-````
+### 3. Install Required Packages
+```bash
+pip install -r requirements.txt
+```
 
----
-
-## 🚀 Usage
-
-1. **Prepare your data**
-
-   * Place your EDF files (e.g. `S001R01.edf`) and their annotation files (`S001R01.edf.event`) under `dataset/files/SXXX/`.
-
-2. **Process & Inspect**
-
-   ```bash
-   python load_data.py
-   ```
-
-   * Computes band powers, plots spectrograms.
-
-3. **Band‑Specific Analysis**
-
-   ```bash
-   python extract_band_specific_power.py
-   ```
-
-   * Frames signals, computes PSD, and visualizes band‑power dynamics.
-
-4. **Filter Design Visualization**
-
-   ```bash
-   python design_filters.py
-   ```
-
-   * Plots magnitude/phase response and pole–zero maps for each band’s filter.
-
-5. **Motor‑Imagery BCI**
-
-   ```bash
-   python application_bci.py
-   ```
-
-   * Extracts features from selected runs, trains an LDA, shows ROC curve, and simulates online decoding.
+**Contents of `requirements.txt`** (if you don't have it yet):
+```
+mne
+numpy
+scipy
+matplotlib
+scikit-learn
+joblib
+```
 
 ---
 
-## 🔧 Configuration
+## 🚀 How to Run
 
-* **Subjects & Runs**
-  In `load_data.py`, adjust:
+> **Note**: All scripts are now inside the `src/` folder. Run them from the **project root** using the `python -m src.<module>` syntax, or directly with `python src/<file>.py`.
 
-  ```python
-  subjects = ['S001', 'S002', …]
-  runs     = ['R01', 'R02', …]
-  ```
-* **Frequency Bands**
-  Defined in `load_data.py` as:
+### 1. Process & Load Data (Basic Inspection)
+```bash
+python -m src.load_data
+```
+or
+```bash
+python src/load_data.py
+```
+- Reads the EDF files defined in `load_data.py`.
+- Applies bandpass filters (α: 8–12Hz, β: 13–30Hz, γ: 30–45Hz).
+- Computes absolute band powers using Welch's method.
+- Displays a spectrogram for the first channel.
 
-  ```python
-  BANDS = {
-      'alpha': [ 8, 12],
-      'beta' : [13, 30],
-      'gamma': [30, 45]
-  }
-  ```
-* **Motor‑Imagery Runs**
-  In `application_bci.py`:
+### 2. Extract Band-Specific Power Dynamics
+```bash
+python -m src.extract_band_specific_power
+```
+- Frames the signal into overlapping windows.
+- Computes PSD per frame using DFT.
+- Generates plots for average PSD and power-time series per band.
 
-  ```python
-  imagery_runs   = ['R04', 'R08', 'R12']
-  target_channels = ['C3..', 'C4..']
-  ```
+### 3. Visualize Filter Designs
+```bash
+python -m src.design_filters
+```
+- Plots **Magnitude/Phase response** and **Pole-Zero diagrams** for the α, β, and γ Butterworth bandpass filters.
+
+### 4. Run the Motor-Imagery BCI Application
+```bash
+python -m src.application_bci
+```
+- Loads specific runs (`R04`, `R08`, `R12`) for motor imagery.
+- Extracts band power features from channels `C3..` and `C4..`.
+- Trains an **LDA (Linear Discriminant Analysis)** classifier.
+- Prints test accuracy, 5-fold cross-validation scores.
+- Displays an **ROC curve**.
+- Simulates a real-time online classification (LEFT vs. RIGHT imagery) using a sliding window.
 
 ---
 
-## 📖 References
+## ⚙️ Configuration
 
-* [MNE-Python Documentation](https://mne.tools/stable/index.html)
-* Welch’s method for power spectral density estimation
-* Linear Discriminant Analysis for BCI feature classification
+All configurable variables are centralized in `src/load_data.py` and `src/application_bci.py`:
 
-## 🛠 Developer
+| File | Variable | Description |
+| :--- | :--- | :--- |
+| `load_data.py` | `subjects` | List of subjects (e.g., `['S001', 'S002']`) |
+| `load_data.py` | `runs` | List of runs (e.g., `['R01', 'R02', ...]`) |
+| `load_data.py` | `BANDS` | Frequency bands (alpha, beta, gamma) |
+| `application_bci.py` | `imagery_runs` | Runs used for motor imagery (default: `R04`, `R08`, `R12`) |
+| `application_bci.py` | `target_channels` | Channels for feature extraction (default: `C3..`, `C4..`) |
+| `application_bci.py` | `window_sec` | Window length in seconds for feature extraction |
 
-Developed by [Mohammad Amin Haji Alirezaei](https://github.com/mahajialirezaei)
-Feel free to ⭐️ this repo or open an issue if you'd like to contribute or have questions!
+> **💡 Path Handling**: After restructuring, `load_data.py` automatically resolves the dataset path using `os.path.dirname(os.path.dirname(__file__))`. It assumes the `dataset/` folder is located in the **project root**.
 
 ---
+
+## 📖 Module Descriptions
+
+### `src/load_data.py`
+- **Core Functions**:
+  - `process_edf_file(file_path)`: Reads EDF, applies filters, extracts events, computes band powers.
+  - `getSubject()`, `getRun()`, `getbase_dir()`, `getBands()`: Utility getters.
+
+### `src/extract_band_specific_power.py`
+- **Core Logic**:
+  - `frame_signal()`: Overlapping sliding windows.
+  - `compute_psd_dft()`: Periodogram via FFT.
+  - `band_power_from_psd()`: Integrates PSD over specific frequency bands.
+  - Calls `plot_spectrogram_and_dominant()` from `plot_spectrograms.py`.
+
+### `src/design_filters.py`
+- **Core Logic**:
+  - Retrieves filter coefficients from `load_data.py`.
+  - Plots magnitude/phase response and pole-zero maps for each filter.
+
+### `src/plot_spectrograms.py`
+- **Core Function**:
+  - `plot_spectrogram_and_dominant()`: Displays a spectrogram (0–50Hz) and a scatter plot of the dominant rhythm over time.
+
+### `src/application_bci.py`
+- **Core Functions**:
+  - `extract_motor_imagery_features()`: Builds feature matrix (X) and labels (y) for imagery events.
+  - `train_lda(X, y)`: Splits data, trains an LDA, evaluates with accuracy, CV, and ROC.
+  - `simulate_online(clf)`: Simulates real-time decoding with overlapping windows.
+
+---
+
+## 🧪 Example Output (BCI Application)
+
+After running `python -m src.application_bci`, you should see something like:
+
+```
+Test accuracy: 0.78
+5-fold CV: 0.75 ± 0.04
+Simulated online motor imagery classification:
+0.00-2.00s -> LEFT
+2.00-4.00s -> RIGHT
+...
+```
+
+An ROC curve plot will also appear, showing the AUC score.
+
+---
+
+## 📚 References
+
+- [MNE-Python Documentation](https://mne.tools/stable/index.html)
+- Welch's method for Power Spectral Density estimation.
+- Linear Discriminant Analysis for feature classification in BCI.
+- Dataset: PhysioNet EEG Motor Imagery Dataset.
+
+---
+
+## 👨‍💻 Developer
+
+Developed by **Mohammad Amin Haji Alirezaei**  
+[![GitHub](https://img.shields.io/badge/GitHub-mahajialirezaei-181717?style=flat&logo=github)](https://github.com/mahajialirezaei)
+
+Feel free to ⭐️ this repository, open an issue, or contribute!
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
